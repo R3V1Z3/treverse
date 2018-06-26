@@ -9,6 +9,7 @@ var eid = '#wrapper';
 var eid_inner = eid + ' .inner';
 var inner_width = $(eid_inner).width();
 var inner_height = $(eid_inner).height();
+var keys_registered = false;
 
 var transforms = {
     'scale': 1, 'translateX': '0px', 'translateY': '0px',
@@ -19,6 +20,7 @@ var transforms = {
 var $c; // will hold container where transforms are made
 
 function main() {
+    console.log('Main started.');
     $c = $('.inner').addClass('inner');
 
     position_sections();
@@ -32,9 +34,12 @@ function main() {
     $current.removeClass('current');
     $current.click();
 
-    // for cases where only one section exists
-    var id = $(eid + ' .section.current').attr('id');
-    transform_focus(id);
+    // workaround to ensure window moves to first section
+    setTimeout(function() {
+        // move to current section
+        $current.click();
+    }, 500);
+
 }
 
 function default_section_html(name, content) {
@@ -94,8 +99,8 @@ function position_sections() {
     const sections = document.querySelectorAll( gd.eid_inner + ' .section' );
     sections.forEach( (el) => {
         render_section_styles(el);
-        var padding_left = parseFloat( $(el).css('padding-left') );
-        var padding_top = parseFloat( $(el).css('padding-top') );
+        var padding_left = parseFloat( $(el).css('padding-left') ) * 10;
+        var padding_top = parseFloat( $(el).css('padding-top') ) * 10;
 
         // calculate and update section height
         var height = $(el).find('.content').height();
@@ -104,7 +109,7 @@ function position_sections() {
         }
 
         // row_height will be the height of the tallest section in the current row
-        if ( height > row_height ) row_height = height;
+        if ( height > row_height ) row_height = height + padding_top;
 
         var x = parseFloat( $(el).css('left') );
         var y = parseFloat( $(el).css('top') );
@@ -228,6 +233,7 @@ function default_transform() {
 function transform_focus(element) {
     // reset transform prior to calculation
     default_transform();
+    
     var t = '';
 
     var e = document.getElementById(element);
@@ -289,7 +295,8 @@ function register_events() {
         }
     });
 
-    if (gd.settings.loaded) {
+    if ( !keys_registered ) {
+        keys_registered = true;
         // LEFT and RIGHT arrows
         document.addEventListener('keyup', (event) => {
             var key = event.key;
