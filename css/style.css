@@ -60,11 +60,11 @@ body, html, #wrapper {
   z-index: 0;
 }
 
-.gd-lyrics .section {
+.bd-lyrics .section {
   filter: blur(2px);
 }
 
-.gd-lyrics .section.current {
+.bd-lyrics .section.current {
   filter: none;
 }
 
@@ -83,7 +83,7 @@ body, html, #wrapper {
   margin: 10px;
 }
 
-.gd-default .inner::before {
+.bd-default .inner::before {
     position: fixed;
     pointer-events: none;
     content: "";
@@ -91,14 +91,14 @@ body, html, #wrapper {
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: ivory; 
-    background-image: 
+    background-color: ivory;
+    background-image:
     linear-gradient(90deg, transparent 79px, #abced4 79px, #abced4 81px, transparent 81px),
     linear-gradient(#eee .1em, transparent .1em);
     background-size: 100% 1.2em;
 }
 
-.gd-default .inner::after {
+.bd-default .inner::after {
   position: fixed;
   pointer-events: none;
   content: "";
@@ -106,7 +106,7 @@ body, html, #wrapper {
   bottom: 0;
   left: 0;
   right: 0;
-  background-image: url(https://ugotsta.github.io/gitdown/assets/paper-watercolor.jpg);
+  background-image: url(https://ugotsta.github.io/breakdown/assets/paper-watercolor.jpg);
   background-color: ivory;
   background-blend-mode: luminosity;
   mix-blend-mode: multiply;
