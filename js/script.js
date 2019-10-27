@@ -1,3 +1,11 @@
+// todo
+// each section has styling like so:
+// <!-- `ⓢ left:505px;top:128px;width:400px;height:200px;` -->
+
+// that styling is getting stripped by bd core
+// we need to have access to that styling content
+// and we need to simply then apply that styling content to each section
+
 class Treverse extends BreakDown {
 
     constructor(el, options) {
@@ -5,14 +13,14 @@ class Treverse extends BreakDown {
     }
 
     ready() {
-        this.updateOffsets();
-        this.extractSvg('filters.svg');
-        this.addFx();
-        this.vignette();
-        this.centerView();
-        this.registerAppEvents();
-        this.updateSliderValue( 'outer-space', this.settings.getValue('outer-space') );
-        this.centerView();
+      this.updateOffsets();
+      this.extractSvg('filters.svg');
+      this.addFx();
+      this.vignette();
+      this.centerView();
+      this.registerAppEvents();
+      this.updateSliderValue( 'outer-space', this.settings.getValue('outer-space') );
+      this.centerView();
     }
 
     extractSvg(filename) {
@@ -106,7 +114,6 @@ class Treverse extends BreakDown {
         this.updateField(slider, value);
     }
 
-    // center view by updating translatex and translatey
     centerView() {
         const $ = document.querySelector.bind(document);
         let $s = $('.section.current');
@@ -240,7 +247,6 @@ class Treverse extends BreakDown {
     }
 
 }
-
 
 // const bd = new BreakDown('#wrapper', {
 //     'title': 'Treverse',
