@@ -13,13 +13,16 @@ class Treverse extends BreakDown {
     }
 
     ready() {
+      // Reset offsets to 0 for clean initial centering
+      this.settings.setValue('offsetx', 0);
+      this.settings.setValue('offsety', 0);
       this.updateOffsets();
-      this.extractSvg('filters.svg');
+      // this.extractSvg('filters.svg'); // commented out - file renamed to filters_backup.svg
       this.addFx();
       this.vignette();
-      this.centerView();
       this.registerAppEvents();
       this.updateSliderValue( 'outer-space', this.settings.getValue('outer-space') );
+      // Center view on initial/hash section (called once after everything is set up)
       this.centerView();
     }
 
@@ -54,7 +57,7 @@ class Treverse extends BreakDown {
 
     addFx() {
         // check if fx layer already exists and return if so
-        if ( this.wrapper.querySelector('.fx') === undefined ) return;
+        if ( this.wrapper.querySelector('.fx') !== null ) return;
         const fx = document.createElement('div');
         fx.classList.add('fx');
         // wrap inner div with fx div
@@ -120,44 +123,94 @@ class Treverse extends BreakDown {
         let $fx = $('.fx');
         let $inner = $('.inner');
 
+        // bail early if required elements don't exist yet
+        if (!$s || !$fx || !$inner) return;
+
         // store $inner dimensions for use later, if not already set
         if( $inner.getAttribute('data-width') === null ) {
             $inner.setAttribute('data-width', $inner.offsetWidth);
             $inner.setAttribute('data-height', $inner.offsetHeight);
         }
 
-        let innerSpace = parseInt( $('.field.inner-space input').value );
-        let outerSpace = parseInt( $('.field.outer-space input').value );
+        let innerSpaceInput = $('.field.inner-space input');
+        let outerSpaceInput = $('.field.outer-space input');
+        let offsetxInput = $('.field.offsetx input');
+        let offsetyInput = $('.field.offsety input');
+
+        // bail if form fields don't exist yet
+        if (!innerSpaceInput || !outerSpaceInput || !offsetxInput || !offsetyInput) return;
+
+        let innerSpace = parseInt(innerSpaceInput.value);
+        let outerSpace = parseInt(outerSpaceInput.value);
 
         const maxw = window.innerWidth;
         const maxh = window.innerHeight;
 
-        // start by setting the scale
+        // get section dimensions and position including margins
+        const sectionStyle = window.getComputedStyle($s);
+        const sectionWidth = $s.offsetWidth;
+        const sectionHeight = $s.offsetHeight;
+        const sectionLeft = $s.offsetLeft;
+        const sectionTop = $s.offsetTop;
+
+        // DEBUG: log section info
+        console.log('Section:', $s.id);
+        console.log('  Position:', sectionLeft, sectionTop);
+        console.log('  Size:', sectionWidth, sectionHeight);
+        console.log('  Inline style.left:', $s.style.left);
+        console.log('  Inline style.top:', $s.style.top);
+        console.log('  Computed left:', sectionStyle.left);
+        console.log('  Computed top:', sectionStyle.top);
+
+        // start by setting the scale to fit section in viewport with padding
         let scale = Math.min(
-            maxw / ( $s.offsetWidth + innerSpace ),
-            maxh / ( $s.offsetHeight + innerSpace )
+            maxw / ( sectionWidth + innerSpace ),
+            maxh / ( sectionHeight + innerSpace )
         );
 
-        // setup positions for transform
-        let x = $s.offsetLeft - ( maxw - $s.offsetWidth ) / 2;
-        let y = $s.offsetTop - ( maxh - $s.offsetHeight ) / 2;
+        console.log('  Scale:', scale, 'Viewport:', maxw, 'x', maxh);
 
-        x -= parseInt( $('.field.offsetx input').value );
-        y -= parseInt( $('.field.offsety input').value );
+        // calculate position to center the section in the viewport
+        // Section will be at: (sectionLeft + translateX) * scale in screen coords
+        // We want: (sectionLeft + translateX) * scale = (viewport - sectionWidth * scale) / 2
+        // Solving: translateX = ((viewport - sectionWidth * scale) / 2) / scale - sectionLeft
+        // Simplify: translateX = (viewport / scale - sectionWidth) / 2 - sectionLeft
+        let x = ((maxw / scale - sectionWidth) / 2) - sectionLeft;
+        let y = ((maxh / scale - sectionHeight) / 2) - sectionTop;
 
-        // initiate transform
+        console.log('  Translation needed:', x, y);
+
+        x -= parseInt(offsetxInput.value);
+        y -= parseInt(offsetyInput.value);
+
+        // initiate transform - apply to .inner for CSS transitions to work
+        // Transforms compose left-to-right in the resulting coordinate space
+        // scale() first scales, then translate happens in scaled space
         const transform = `
-            translateX(${-x}px)
-            translateY(${-y}px)
             scale(${scale})
+            translateX(${x}px)
+            translateY(${y}px)
         `;
+        
+        console.log('  Final transform:', transform);
+        console.log('  Expected final position:', {
+            sectionScreenLeft: (sectionLeft + x) * scale,
+            sectionScreenTop: (sectionTop + y) * scale,
+            viewportCenter: { x: maxw/2, y: maxh/2 },
+            sectionCenter: { 
+                x: (sectionLeft + x + sectionWidth/2) * scale, 
+                y: (sectionTop + y + sectionHeight/2) * scale 
+            }
+        });
+        
         let w = Number($inner.getAttribute('data-width'));
         let h = Number($inner.getAttribute('data-height'));
         $inner.style.width = w + outerSpace + 'px';
         $inner.style.height = h + outerSpace + 'px';
-        $fx.style.width = $inner.offsetWidth + 'px';
-        $fx.style.height = $inner.offsetHeight + 'px';
-        $fx.style.transform = transform;
+        $inner.style.transform = transform;
+        // make .fx wrapper match .inner dimensions
+        $fx.style.width = (w + outerSpace) + 'px';
+        $fx.style.height = (h + outerSpace) + 'px';
     }
 
     registerAppEvents() {
@@ -174,6 +227,18 @@ class Treverse extends BreakDown {
 
         let f = document.querySelector('.nav .field.select.svg-filter select');
         f.addEventListener( 'change', this.svgChange.bind(this) );
+
+        // handle clicks on section links for navigation
+        this.events.add('.inner a[href^="#"]', 'click', e => {
+            e.preventDefault();
+            const hash = e.target.getAttribute('href').substring(1);
+            if (hash) {
+                this.sections.setCurrent(hash);
+                this.goToSection();
+                // update URL without triggering popstate
+                history.pushState(null, null, '#' + hash);
+            }
+        });
 
         // LEFT and RIGHT arrows
         document.addEventListener('keyup', e => {
@@ -217,6 +282,20 @@ class Treverse extends BreakDown {
         })
         .draggable({ onmove: this.dragMoveListener.bind(this) });
 
+    }
+
+    goToSection() {
+        // call parent's goToSection to update DOM classes
+        super.goToSection();
+        // reset offsets to 0 for clean centering on new section
+        this.settings.setValue('offsetx', 0);
+        this.settings.setValue('offsety', 0);
+        this.updateSliderValue('offsetx', 0);
+        this.updateSliderValue('offsety', 0);
+        this.inner.setAttribute('data-x', 0);
+        this.inner.setAttribute('data-y', 0);
+        // then center the view on the new current section
+        this.centerView();
     }
 
     dragMoveListener (event) {

@@ -1,4 +1,4 @@
-# Treverse
+# Treverse Engine
 The open canvas for immersive interaction with Markdwn documents and interactive stories.
 - [What's it do?](#about-treverse)
 - [What's Markdown?](#what-is-markdown)
@@ -21,7 +21,7 @@ Markdown is a simple, plain text language sort of like BBCode. It lets you creat
 
 ## How to use Treverse
 It's easy. Create a file at GitHub Gist, get the file's ID then paste it in the Gist field in the Info panel.
-- [Cool, take me back to the start.](#treverse)
+- [Cool, take me back to the start.](#treverse-engine)
 
 <!-- `🅢 {left:700px;top:300px;width:400px;height:200px;}` -->
 

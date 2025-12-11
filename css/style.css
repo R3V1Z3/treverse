@@ -33,7 +33,7 @@ body, html, #wrapper {
 
 .inner {
   transition: all 200ms ease;
-  transform-origin: center;
+  transform-origin: top left;
   height: 1000px;
   width: 2000px;
   position: fixed;
